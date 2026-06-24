@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kayak Shuttle Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f8; --surface: #ffffff; --surface-2: #f7f9fb;
+      --border: #dde3ea; --border-strong: #c4cdd6;
+      --text: #1a2530; --text-muted: #5a6e80;
+      --accent: #1a6fc4; --accent-light: #e6f0fb; --accent-dark: #145499;
+      --success: #1a7a4a; --success-light: #e6f5ed;
+      --danger: #c0392b; --danger-light: #fdecea;
+      --warning: #92580a; --warning-light: #fef3e2;
+      --radius: 10px; --radius-lg: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .page-wrap { max-width: 680px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2.5rem; }
+    .logo-mark { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: var(--accent); border-radius: 14px; margin-bottom: 1rem; }
+    .logo-mark svg { width: 28px; height: 28px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.3px; color: var(--text); margin-bottom: 0.4rem; }
+    .subtitle { font-size: 15px; color: var(--text-muted); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
+    .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+    input[type="text"], input[type="number"], input[type="date"], input[type="time"] {
+      width: 100%; height: 38px; padding: 0 10px;
+      font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text);
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
+      outline: none; transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--accent); background: #fff; }
+    .hint { font-size: 12px; color: var(--text-muted); background: var(--accent-light); border-radius: var(--radius); padding: 8px 12px; margin-top: 0.75rem; line-height: 1.5; }
+    .car-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 0.75rem; transition: border-color 0.2s, background 0.2s; }
+    .car-card.non-paddler { border-color: #b8a9e8; background: #f5f3fd; }
+    .car-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .car-header-left { display: flex; align-items: center; gap: 10px; }
+    .car-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .badge-nonpaddle { font-size: 11px; font-weight: 500; background: #e8e3f8; color: #5340a8; border-radius: 5px; padding: 2px 8px; }
+    .remove-btn { background: none; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 16px; line-height: 1; transition: background 0.15s, color 0.15s; }
+    .remove-btn:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+    .toggle-row { display: flex; align-items: center; gap: 8px; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track { position: absolute; inset: 0; background: var(--border-strong); border-radius: 20px; transition: background 0.2s; }
+    .toggle input:checked + .toggle-track { background: #7c6bd4; }
+    .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+    .toggle-label { font-size: 13px; color: var(--text-muted); }
+    .add-btn { width: 100%; height: 38px; background: none; border: 1px dashed var(--border-strong); border-radius: var(--radius); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-muted); transition: background 0.15s, color 0.15s, border-color 0.15s; margin-top: 0.25rem; }
+    .add-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+    .calc-btn { width: 100%; height: 46px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; margin-top: 0.5rem; }
+    .calc-btn:hover { background: var(--accent-dark); }
+    .calc-btn:active { transform: scale(0.99); }
+    .error { background: var(--danger-light); color: var(--danger); border: 1px solid #f5c6c2; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; margin-top: 1rem; line-height: 1.6; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 1.5rem; box-shadow: var(--shadow); }
+    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+    .result-badge { background: var(--success-light); color: var(--success); border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .result-title { font-size: 16px; font-weight: 600; color: var(--text); }
+    .result-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .metric { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
+    .metric-value { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 4px; }
+    .metric-label { font-size: 11px; color: var(--text-muted); font-weight: 500; line-height: 1.4; }
+    .itinerary { margin-bottom: 1.5rem; }
+    .itinerary-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .itin-row { display: flex; align-items: flex-start; gap: 14px; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+    .itin-row:last-child { border-bottom: none; }
+    .itin-time { font-size: 14px; font-weight: 600; color: var(--accent); min-width: 52px; padding-top: 1px; }
+    .itin-body { flex: 1; }
+    .itin-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .itin-detail { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .steps { display: flex; flex-direction: column; }
+    .step { display: flex; gap: 14px; padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step-body { flex: 1; }
+    .step-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .step-detail { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .car-list { margin-top: 6px; }
+    .car-tag { display: inline-block; background: var(--accent-light); color: var(--accent-dark); font-size: 12px; font-weight: 500; border-radius: 5px; padding: 2px 8px; margin: 2px 3px 2px 0; }
+    .car-tag.np { background: #e8e3f8; color: #5340a8; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+    .print-btn { width: 100%; height: 40px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; margin-top: 1rem; transition: background 0.15s; }
+    .print-btn:hover { background: var(--surface-2); }
+    footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 2rem; padding-bottom: 1rem; }
+    @media (max-width: 500px) {
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .grid-3 .field:first-child { grid-column: 1 / -1; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .card, .result-card { box-shadow: none; border: 1px solid #ccc; }
+      .calc-btn, .add-btn, .remove-btn, .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 17c3-2 5-3 9-3s6 1 9 3"/>
+        <path d="M12 14V6"/>
+        <path d="M8 9l4-3 4 3"/>
+        <circle cx="12" cy="19" r="1.5" fill="white" stroke="none"/>
+      </svg>
+    </div>
+    <h1>Kayak Shuttle Planner</h1>
+    <p class="subtitle">Logistics and itinerary for your paddle trip</p>
+  </header>
+
+  <!-- Trip details -->
+  <div class="card">
+    <div class="card-title">Trip details</div>
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div class="field">
+        <label for="start">Launch (start point)</label>
+        <input type="text" id="start" placeholder="e.g. Rhubodach" value="Rhubodach" />
+      </div>
+      <div class="field">
+        <label for="end">Landing (end point)</label>
+        <input type="text" id="end" placeholder="e.g. Ettrick Bay" value="Ettrick Bay" />
+      </div>
+    </div>
+    <div class="field" style="max-width:220px;">
+      <label for="total-paddlers">Total paddlers</label>
+      <input type="number" id="total-paddlers" min="1" value="6" />
+    </div>
+    <div class="hint">One kayak per paddler. All cars, paddlers, and kayaks start at the launch. Cars are shuttled empty to the landing first, then drivers return so everyone paddles together.</div>
+  </div>
+
+  <!-- Timing -->
+  <div class="card">
+    <div class="card-title">Timing</div>
+    <div class="grid-4" style="margin-bottom:12px;">
+      <div class="field" style="grid-column: span 2;">
+        <label for="trip-date">Trip date</label>
+        <input type="date" id="trip-date" />
+      </div>
+      <div class="field" style="grid-column: span 2;">
+        <label for="paddle-start">Paddle start time (launch)</label>
+        <input type="time" id="paddle-start" value="10:00" />
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="drive-time">Driving time between points (mins)</label>
+        <input type="number" id="drive-time" min="1" value="30" />
+      </div>
+      <div class="field">
+        <label for="paddle-time">Estimated paddle duration (mins)</label>
+        <input type="number" id="paddle-time" min="1" value="90" />
+      </div>
+    </div>
+    <div class="hint">Paddle start time is the anchor. The itinerary works backwards to calculate the meet time, and forwards to calculate arrival at the landing and when you will be home.</div>
+  </div>
+
+  <!-- Cars -->
+  <div class="card">
+    <div class="card-title">Cars</div>
+    <div id="cars-container"></div>
+    <button class="add-btn" onclick="addCar()">+ Add another car</button>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">Calculate shuttle plan and itinerary</button>
+
+  <div id="error-msg"></div>
+  <div id="result"></div>
+
+  <footer>Kayak Shuttle Planner &mdash; free to use and share</footer>
+
+</div>
+
+<script>
+  // Set default date to today
+  document.getElementById('trip-date').valueAsDate = new Date();
+
+  let carCount = 0;
+  const cars = {};
+
+  function addCar(defaultKayaks = 1) {
+    carCount++;
+    const id = carCount;
+    cars[id] = { name: 'Car ' + id, driver: 'Driver ' + id, seats: 4, kayaks: defaultKayaks, nonPaddler: false };
+    const container = document.getElementById('cars-container');
+    const div = document.createElement('div');
+    div.className = 'car-card';
+    div.id = 'car-card-' + id;
+    div.innerHTML = `
+      <div class="car-header">
+        <div class="car-header-left">
+          <span class="car-label" id="car-label-${id}">Car ${id}</span>
+          <span class="badge-nonpaddle" id="badge-${id}" style="display:none;">non-paddling driver</span>
+        </div>
+        ${id > 1 ? `<button class="remove-btn" onclick="removeCar(${id})" aria-label="Remove car ${id}">&times;</button>` : ''}
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Car name or description</label>
+          <input type="text" placeholder="e.g. Red Golf" value="Car ${id}"
+            oninput="cars[${id}].name=this.value; document.getElementById('car-label-${id}').textContent=this.value;" />
+        </div>
+        <div class="field">
+          <label>Seats (inc. driver)</label>
+          <input type="number" min="1" max="9" value="4" oninput="cars[${id}].seats=parseInt(this.value)||0" />
+        </div>
+        <div class="field">
+          <label>Kayaks it can carry</label>
+          <input type="number" min="0" max="10" value="${defaultKayaks}" oninput="cars[${id}].kayaks=parseInt(this.value)||0" />
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Driver name</label>
+        <input type="text" placeholder="e.g. Sarah" value="Driver ${id}" oninput="cars[${id}].driver=this.value;" />
+      </div>
+      <label class="toggle-row" for="np-toggle-${id}">
+        <div class="toggle">
+          <input type="checkbox" id="np-toggle-${id}" onchange="toggleNonPaddler(${id}, this.checked)" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label">Driver does not paddle</span>
+      </label>`;
+    container.appendChild(div);
+  }
+
+  function toggleNonPaddler(id, checked) {
+    cars[id].nonPaddler = checked;
+    const card = document.getElementById('car-card-' + id);
+    const badge = document.getElementById('badge-' + id);
+    card.classList.toggle('non-paddler', checked);
+    badge.style.display = checked ? 'inline' : 'none';
+  }
+
+  function removeCar(id) {
+    delete cars[id];
+    const el = document.getElementById('car-card-' + id);
+    if (el) el.remove();
+  }
+
+  function tags(carArray) {
+    return carArray.map(c => {
+      const label = c.driver ? `${c.driver} (${c.name})` : c.name;
+      return `<span class="car-tag${c.nonPaddler ? ' np' : ''}">${label}${c.nonPaddler ? ' *' : ''}</span>`;
+    }).join('');
+  }
+
+  // Just driver name or car name for prose references
+  function driverName(c) {
+    return c.driver || c.name;
+  }
+
+  // Car name only -- never shows driver name
+  function carName(c) {
+    return c.name;
+  }
+
+  // Comma separated list of car names only
+  function carNames(carArray) {
+    return carArray.map(c => c.name).join(', ');
+  }
+
+  // Format a Date object as HH:MM
+  function fmt(date) {
+    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
+  // Format a Date object as day DD MMM YYYY
+  function fmtDate(date) {
+    return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // Add minutes to a Date object, return new Date
+  function addMins(date, mins) {
+    return new Date(date.getTime() + mins * 60000);
+  }
+
+  function calculate() {
+    document.getElementById('error-msg').innerHTML = '';
+    document.getElementById('result').innerHTML = '';
+
+    const totalPaddlers = parseInt(document.getElementById('total-paddlers').value) || 0;
+    const start         = document.getElementById('start').value.trim() || 'the launch';
+    const end           = document.getElementById('end').value.trim() || 'the landing';
+    const dateVal       = document.getElementById('trip-date').value;
+    const paddleStartVal= document.getElementById('paddle-start').value;
+    const driveTimeMins = parseInt(document.getElementById('drive-time').value) || 0;
+    const paddleTimeMins= parseInt(document.getElementById('paddle-time').value) || 0;
+    // Read car values fresh from DOM inputs to ensure we have latest values
+    const carList = Object.keys(cars).map(id => {
+      const card = document.getElementById('car-card-' + id);
+      if (!card) return null;
+      const inputs = card.querySelectorAll('input[type="number"]');
+      const textInputs = card.querySelectorAll('input[type="text"]');
+      return {
+        name:       textInputs[0] ? textInputs[0].value || cars[id].name : cars[id].name,
+        driver:     textInputs[1] ? textInputs[1].value || cars[id].driver : cars[id].driver,
+        seats:      inputs[0] ? parseInt(inputs[0].value) || 0 : cars[id].seats,
+        kayaks:     inputs[1] ? parseInt(inputs[1].value) || 0 : cars[id].kayaks,
+        nonPaddler: cars[id].nonPaddler
+      };
+    }).filter(Boolean);
+
+    // Separate paddling cars from non-paddling driver cars
+    // Non-paddling drivers are flexible -- excluded from shuttle logic, noted separately
+    const nonPaddlerCars   = carList.filter(c => c.nonPaddler);
+    const paddlingCars     = carList.filter(c => !c.nonPaddler);
+    const nonPaddlerCount  = nonPaddlerCars.length;
+    const totalKayaks      = totalPaddlers; // one per paddler only
+
+    // --- Validation ---
+    if (paddlingCars.length < 2)  { showError('You need at least 2 cars with paddling drivers to run a shuttle.'); return; }
+    if (totalPaddlers < 1)        { showError('Please enter at least 1 paddler.'); return; }
+    if (!dateVal)                  { showError('Please enter a trip date.'); return; }
+    if (!paddleStartVal)           { showError('Please enter a paddle start time.'); return; }
+    if (driveTimeMins < 1)         { showError('Please enter a driving time between points.'); return; }
+    if (paddleTimeMins < 1)        { showError('Please enter an estimated paddle duration.'); return; }
+
+    // Seats: only paddling cars count (non-paddling driver takes their own seat)
+    // Kayaks: all cars count since non-paddling driver's car may carry kayaks if needed
+    const paddlingSeats = paddlingCars.reduce((s, c) => s + (c.seats  || 0), 0);
+    const totalKayakCap = carList.reduce((s, c) => s + (c.kayaks || 0), 0);
+
+    if (paddlingSeats < totalPaddlers) {
+      const seatDetail = paddlingCars.map(c => c.name + ' has ' + c.seats + ' seat' + (c.seats > 1 ? 's' : '')).join(', ');
+      showError('Not enough seats: you need ' + totalPaddlers + ' seats for your paddlers but only have ' + paddlingSeats + ' across paddling cars. (' + seatDetail + '). Please add more cars or increase seat capacity.');
+      return;
+    }
+    if (totalKayakCap < totalKayaks) {
+      const kayakDetail = carList.map(c => c.name + ' carries ' + c.kayaks + ' kayak' + (c.kayaks > 1 ? 's' : '')).join(', ');
+      showError('Not enough kayak spaces: you need ' + totalKayaks + ' kayak spaces (one per paddler) but only have ' + totalKayakCap + ' across all cars. (' + kayakDetail + '). Please add more cars or increase kayak capacity.');
+      return;
+    }
+
+    // --- Shuttle logic ---
+    // The shuttle cars (driven to the landing first) must together have:
+    //   a) Enough seats for ALL paddlers to get home from the landing
+    //   b) Enough kayak capacity for ALL kayaks to get home
+    // The put-in cars (staying at the launch) must have:
+    //   c) Enough seats to carry all shuttle drivers back from the landing to the launch
+    //
+    // Non-paddling driver cars are always added to the shuttle group (they drive to the
+    // landing) if their capacity is needed. They never appear in the put-in group since
+    // they don't paddle and are not constrained to the launch.
+    //
+    // Strategy: try all subsets of paddling cars as the shuttle group. For each, add
+    // non-paddling cars to fill any remaining seat/kayak gap. Pick the smallest valid group.
+
+    let bestSolution = null;
+
+    // Try all subset sizes of paddling cars for the shuttle group (1 up to all of them).
+    // If all paddling cars shuttle to the landing, non-paddling cars must return the
+    // shuttle drivers to the launch -- so we also try that case.
+    for (let size = 1; size <= paddlingCars.length; size++) {
+      const combos = getCombinations(paddlingCars, size);
+      for (const shuttlePaddling of combos) {
+        const putIn = paddlingCars.filter(c => !shuttlePaddling.includes(c));
+
+        let shuttleSeats    = shuttlePaddling.reduce((s, c) => s + c.seats,  0);
+        let shuttleKayakCap = shuttlePaddling.reduce((s, c) => s + c.kayaks, 0);
+        const putInSeats    = putIn.reduce((s, c) => s + c.seats, 0);
+        const driversToReturn = shuttlePaddling.length;
+
+        // Non-paddling cars can act as the return vehicle if there are no put-in cars
+        // or if put-in cars don't have enough seats to return shuttle drivers
+        const npReturnSeats = nonPaddlerCars.reduce((s, c) => s + c.seats, 0);
+        const totalReturnSeats = putInSeats + npReturnSeats;
+        if (totalReturnSeats < driversToReturn) continue;
+
+        // Add non-paddling cars to shuttle if seats or kayak capacity still needed
+        const npShuttle = [];
+        for (const npCar of nonPaddlerCars) {
+          if (shuttleSeats < totalPaddlers || shuttleKayakCap < totalKayaks) {
+            npShuttle.push(npCar);
+            shuttleSeats    += npCar.seats;
+            shuttleKayakCap += npCar.kayaks;
+          }
+        }
+
+        if (shuttleSeats >= totalPaddlers && shuttleKayakCap >= totalKayaks) {
+          // Work out which cars (put-in + np) return shuttle drivers to launch
+          // Non-paddling cars only go back if put-in seats aren't enough
+          const npReturning = putInSeats >= driversToReturn ? [] : nonPaddlerCars;
+          bestSolution = {
+            shuttle:     [...shuttlePaddling, ...npShuttle],
+            putIn:       putIn,
+            npShuttle:   npShuttle,
+            npUnused:    nonPaddlerCars.filter(c => !npShuttle.includes(c)),
+            npReturning: npReturning
+          };
+          break;
+        }
+      }
+      if (bestSolution) break;
+    }
+
+    if (!bestSolution) {
+      // Check if imperfect scenario is possible:
+      // All cars go to landing, one car (the put-in car) returns shuttle drivers to launch,
+      // then that driver collects their car after the paddle and returns to landing for remaining kayak.
+      // This works if: total seats >= paddlers AND total kayak capacity >= total kayaks
+      // (already validated above) but no standard arrangement exists due to return seat constraint.
+
+      const totalAllSeats  = paddlingCars.reduce((s,c) => s+c.seats, 0) + nonPaddlerCars.reduce((s,c) => s+c.seats, 0);
+      const totalAllKayaks = carList.reduce((s,c) => s+c.kayaks, 0);
+
+      if (totalAllSeats >= totalPaddlers && totalAllKayaks >= totalKayaks) {
+        // Imperfect scenario is viable -- use it
+        // Pick put-in car: fewest kayak spaces (minimises stranded kayaks at landing)
+        const sortedByKayaks = [...paddlingCars].sort((a,b) => a.kayaks - b.kayaks);
+        const imperfectPutIn   = sortedByKayaks[0];
+        const imperfectShuttle = paddlingCars.filter(c => c !== imperfectPutIn);
+        const imperfectKayaksInShuttle = imperfectShuttle.reduce((s,c) => s+c.kayaks, 0) + nonPaddlerCars.reduce((s,c) => s+c.kayaks, 0);
+        const strandedKayaks   = totalKayaks - imperfectKayaksInShuttle;
+        bestSolution = {
+          shuttle:     [...imperfectShuttle, ...nonPaddlerCars],
+          putIn:       [imperfectPutIn],
+          npShuttle:   nonPaddlerCars,
+          npUnused:    [],
+          npReturning: [],
+          imperfect:   true,
+          strandedKayaks,
+          imperfectPutIn
+        };
+      } else {
+        // Genuinely not enough capacity -- diagnose
+        let bestAttempt = null;
+        let bestShortfall = Infinity;
+
+        function getCombinationsDiag(arr, k) {
+          const results = [];
+          function h(start, combo) {
+            if (combo.length === k) { results.push([...combo]); return; }
+            for (let i = start; i < arr.length; i++) { combo.push(arr[i]); h(i+1, combo); combo.pop(); }
+          }
+          h(0, []);
+          return results;
+        }
+
+        for (let size = 1; size <= paddlingCars.length; size++) {
+          const combos = getCombinationsDiag(paddlingCars, size);
+          for (const shuttleP of combos) {
+            const putInP = paddlingCars.filter(c => !shuttleP.includes(c));
+            let sSeats  = shuttleP.reduce((s,c) => s+c.seats,  0);
+            let sKayaks = shuttleP.reduce((s,c) => s+c.kayaks, 0);
+            for (const np of nonPaddlerCars) { sSeats += np.seats; sKayaks += np.kayaks; }
+            const returnSeats     = putInP.reduce((s,c)=>s+c.seats,0) + nonPaddlerCars.reduce((s,c)=>s+c.seats,0);
+            const driversToReturn = shuttleP.length;
+            const shortfall = Math.max(0, totalPaddlers - sSeats)
+                            + Math.max(0, totalKayaks   - sKayaks)
+                            + Math.max(0, driversToReturn - returnSeats);
+            if (shortfall < bestShortfall) {
+              bestShortfall = shortfall;
+              bestAttempt   = { shuttleP, putInP, sSeats, sKayaks, returnSeats, driversToReturn };
+            }
+          }
+        }
+
+        const issues = [];
+        if (bestAttempt) {
+          if (bestAttempt.sSeats < totalPaddlers)
+            issues.push('shuttle cars only have ' + bestAttempt.sSeats + ' seat' + (bestAttempt.sSeats !== 1 ? 's' : '') + ' but need ' + totalPaddlers + ' for all paddlers');
+          if (bestAttempt.sKayaks < totalKayaks)
+            issues.push('shuttle cars only have ' + bestAttempt.sKayaks + ' kayak space' + (bestAttempt.sKayaks !== 1 ? 's' : '') + ' but need ' + totalKayaks);
+          if (bestAttempt.returnSeats < bestAttempt.driversToReturn)
+            issues.push('only ' + bestAttempt.returnSeats + ' seat' + (bestAttempt.returnSeats !== 1 ? 's' : '') + ' available to return ' + bestAttempt.driversToReturn + ' shuttle driver' + (bestAttempt.driversToReturn !== 1 ? 's' : '') + ' to the launch -- you need a non-paddling driver or an extra car');
+        }
+
+        let diagMsg = 'No valid shuttle arrangement could be found.';
+        if (issues.length > 0) diagMsg += ' Problem: ' + issues.join('; and ') + '.';
+        diagMsg += ' (Seats: ' + carList.map(c => c.name + '=' + c.seats).join(', ') + '.'
+                 + ' Kayak spaces: ' + carList.map(c => c.name + '=' + c.kayaks).join(', ') + '.)';
+        showError(diagMsg);
+        return;
+      }
+    }
+
+    const { shuttle, putIn, npShuttle, npUnused, npReturning, imperfect, strandedKayaks, imperfectPutIn } = bestSolution;
+    const npNeeded      = npShuttle.length > 0;
+    const npUnneeded    = npUnused.length > 0;
+    const allReturnCars = [...putIn, ...npReturning];
+    const isImperfect   = !!imperfect;
+
+    // --- Build timeline ---
+    const [ph, pm]      = paddleStartVal.split(':').map(Number);
+    const [dy, dmo, dd] = dateVal.split('-').map(Number);
+    const paddleStart   = new Date(dy, dmo - 1, dd, ph, pm, 0);
+    const meetTime      = addMins(paddleStart, -(2 * driveTimeMins));
+    const shuttleArrive = addMins(meetTime,    driveTimeMins);
+    const driversBack   = addMins(shuttleArrive, 2 * driveTimeMins); // = paddleStart
+    const paddleEnd     = addMins(paddleStart,  paddleTimeMins);
+    const driveBack     = addMins(paddleEnd,    driveTimeMins);
+    const homeTime      = addMins(driveBack,    driveTimeMins);
+
+    // Helper functions
+    function driverList(carArray) {
+      return carArray.map(c => driverName(c)).join(', ');
+    }
+
+    // --- Distribute non-driving paddlers across paddling cars ---
+    const passengerCount  = totalPaddlers - paddlingCars.length;
+    const passengers      = {};
+    let passengersLeft    = passengerCount;
+    for (const car of paddlingCars) {
+      const available      = (car.seats || 1) - 1;
+      const assigned       = Math.min(available, passengersLeft);
+      passengers[car.name] = assigned;
+      passengersLeft      -= assigned;
+    }
+    function carWithPassengers(c) {
+      const p = passengers[c.name] || 0;
+      const peopleStr = c.nonPaddler
+        ? `${driverName(c)} only`
+        : `${driverName(c)} + ${p} passenger${p !== 1 ? 's' : ''}`;
+      return `${c.name} (${peopleStr}, ${c.kayaks} kayak${c.kayaks !== 1 ? 's' : ''})`;
+    }
+
+    // --- Work out which shuttle cars go back to launch to drop put-in drivers ---
+    const putInDriverCount = putIn.length; // all put-in drivers are paddlers
+    let seatsNeeded        = putInDriverCount;
+    const carsGoingBack    = [];
+    const carsGoingHome    = [];
+    for (const c of shuttle) {
+      if (seatsNeeded > 0) {
+        carsGoingBack.push(c);
+        seatsNeeded -= (c.seats - 1); // minus 1 for the shuttle driver
+      } else {
+        carsGoingHome.push(c);
+      }
+    }
+
+    // Work out which shuttle cars go back to launch to drop put-in drivers
+    // (already computed below in carsGoingBack/carsGoingHome)
+    const hasNonPaddlers  = nonPaddlerCars.length > 0;
+    const nonPaddlerNames = nonPaddlerCars.map(c => driverName(c));
+
+    // --- Build itinerary detail strings (avoids IIFE-in-template-literal syntax issues) ---
+    const nonDrivingPaddlers = totalPaddlers - paddlingCars.length;
+    const paddlingShuttle    = shuttle.filter(c => !c.nonPaddler);
+    const npInGoingBack      = npNeeded && carsGoingBack.some(c => npShuttle.includes(c));
+
+    const allMeetCars = npNeeded ? [...paddlingCars, ...npShuttle] : paddlingCars;
+    const d_meet = `All ${totalPaddlers} paddler${totalPaddlers > 1 ? 's' : ''} arrive at the launch with all ${paddlingCars.length} paddling car${paddlingCars.length > 1 ? 's' : ''} and all ${totalKayaks} kayak${totalKayaks > 1 ? 's' : ''} loaded. Car summary: ${allMeetCars.map(c => carWithPassengers(c)).join(', ')}.`
+      + (npNeeded ? ` <strong>${carNames(npShuttle)}</strong> (non-paddling driver${npShuttle.length > 1 ? 's' : ''}) will drive to ${end} as their capacity is needed.`
+        : hasNonPaddlers ? ` <strong>${carNames(nonPaddlerCars)}</strong> (non-paddling driver${nonPaddlerCount > 1 ? 's' : ''}) is not needed today -- paddling cars have sufficient capacity.` : '');
+
+    let d_shuttle = `${carNames(shuttle)} drive${shuttle.length === 1 ? 's' : ''} empty to the landing. Driver${shuttle.length > 1 ? 's' : ''}: <strong>${driverList(paddlingShuttle)}</strong>. Estimated arrival ${fmt(shuttleArrive)}.`;
+    if (nonDrivingPaddlers > 0) d_shuttle += ` The ${nonDrivingPaddlers} non-driving paddler${nonDrivingPaddlers > 1 ? 's' : ''} wait at ${start}.`;
+
+    let d_return = `${carNames(allReturnCars)} drive${allReturnCars.length === 1 ? 's' : ''} to ${end} to pick up <strong>${driverList(paddlingShuttle)}</strong> and return to ${start}. Estimated arrival back at ${start}: ${fmt(driversBack)}.`;
+    if (nonDrivingPaddlers > 0) d_return += ` The ${nonDrivingPaddlers} non-driving paddler${nonDrivingPaddlers > 1 ? 's' : ''} continue waiting at ${start}.`;
+    if (npReturning.length > 0) d_return += ` ${carNames(npReturning)} is making the return trip as there are no put-in cars.`;
+
+    let d_together = `All paddling drivers now at the launch: <strong>${driverList(paddlingCars)}</strong>.`;
+    d_together += nonDrivingPaddlers > 0
+      ? ` The ${nonDrivingPaddlers} non-driving paddler${nonDrivingPaddlers > 1 ? 's' : ''} who waited at ${start} are reunited with their drivers. Everyone is ready to paddle.`
+      : ` Everyone is ready to paddle.`;
+    if (npNeeded) d_together += ` ${carNames(npShuttle)} (non-paddling driver${npShuttle.length > 1 ? 's' : ''}) will drive to ${end} to help with capacity.`;
+
+    let d_paddleoff = `All ${totalPaddlers} paddler${totalPaddlers > 1 ? 's' : ''} on the water. ${carNames(paddlingShuttle)} parked at ${end}.`;
+    if (npNeeded) d_paddleoff += ` ${carNames(npShuttle)} also heading to ${end}.`;
+
+    let d_arrive = `Estimated landing time after ${fmtDuration(paddleTimeMins)} on the water. ${carNames(shuttle)} parked here at ${end}.`;
+    d_arrive += putIn.length > 0 ? ` ${carNames(putIn)} still parked at ${start}.` : ` All cars are at ${end} -- no cars left at ${start}.`;
+
+    const shuttleKayakTotal = shuttle.reduce((s,c) => s+c.kayaks, 0);
+    const kayaksNotLoaded   = isImperfect ? Math.max(0, totalKayaks - shuttleKayakTotal) : 0;
+    const kayaksLoaded      = totalKayaks - kayaksNotLoaded;
+
+    let d_load = isImperfect
+      ? `Load ${kayaksLoaded} of ${totalKayaks} kayaks and all ${totalPaddlers} paddler${totalPaddlers > 1 ? 's' : ''} into ${carNames(shuttle)}. Car summary: ${shuttle.map(c => carWithPassengers(c)).join(', ')}. ⚠️ ${kayaksNotLoaded} kayak${kayaksNotLoaded > 1 ? 's' : ''} cannot be loaded as there is not enough space -- ${kayaksNotLoaded === 1 ? 'it is' : 'they are'} left at ${end} for <strong>${driverName(imperfectPutIn)}</strong> to collect on their return trip.`
+      : `Load all ${totalKayaks} kayak${totalKayaks > 1 ? 's' : ''} and all ${totalPaddlers} paddler${totalPaddlers > 1 ? 's' : ''} into ${carNames(shuttle)}. Car summary: ${shuttle.map(c => carWithPassengers(c)).join(', ')}.`;
+    d_load += putIn.length > 0
+      ? ` ${carNames(putIn)} still parked at ${start} -- <strong>${driverList(putIn)}</strong> need${putIn.length === 1 ? 's' : ''} a lift back to collect their car${putIn.length > 1 ? 's' : ''}.`
+      : ` All cars are here -- no cars left at ${start}.`;
+
+    let d_drop = putIn.length > 0
+      ? (isImperfect
+          ? `${carNames(carsGoingBack)} drive${carsGoingBack.length === 1 ? 's' : ''} back to ${start} (${fmtDuration(driveTimeMins)}) carrying <strong>${driverList(putIn)}</strong>. Note: <strong>${driverName(imperfectPutIn)}</strong> will then need to drive back to ${end} to collect ${strandedKayaks} kayak${strandedKayaks > 1 ? 's' : ''} that could not be loaded -- this is an extra trip.`
+          : `${carNames(carsGoingBack)} drive${carsGoingBack.length === 1 ? 's' : ''} back to ${start} (${fmtDuration(driveTimeMins)}) carrying <strong>${driverList(putIn)}</strong> so ${putInDriverCount === 1 ? 'they can' : 'they can each'} collect their car${putInDriverCount > 1 ? 's' : ''}.`)
+      : `No put-in cars to collect -- all cars are already at ${end}.`;
+    if (carsGoingHome.length > 0) d_drop += ` ${carNames(carsGoingHome)} head${carsGoingHome.length === 1 ? 's' : ''} straight home from ${end}.`;
+    if (npNeeded && !npInGoingBack) d_drop += ` ${carNames(npShuttle)} head${npShuttle.length === 1 ? 's' : ''} straight home from ${end} -- no need to return to ${start}.`;
+
+    const d_home = putIn.length > 0
+      ? `<strong>${driverList(putIn)}</strong> back at ${start} in their own car${putIn.length > 1 ? 's' : ''} at approximately ${fmt(homeTime)}. Everyone heads home.`
+      : `All paddlers and kayaks loaded. Everyone heads home from ${end}.`;
+
+    // --- Itinerary rows ---
+    const itinRows = [
+      { time: fmt(meetTime),      label: `Meet at ${start}`,                                            detail: d_meet      },
+      { time: fmt(meetTime),      label: `Shuttle cars leave for ${end}`,                                detail: d_shuttle   },
+      { time: fmt(shuttleArrive), label: `Return cars leave ${start} to collect shuttle drivers`,        detail: d_return    },
+      { time: fmt(driversBack),   label: `All paddlers together at ${start}`,                            detail: d_together  },
+      { time: fmt(paddleStart),   label: `Paddle off from ${start}`,                                     detail: d_paddleoff },
+      { time: fmt(paddleEnd),     label: `Everyone arrives at ${end}`,                                   detail: d_arrive    },
+      { time: fmt(paddleEnd),     label: `Load kayaks and paddlers into shuttle cars at ${end}`,         detail: d_load      },
+      ...(putIn.length > 0 ? [{ time: fmt(driveBack), label: `Drop put-in drivers back at ${start} to collect their cars`, detail: d_drop }] : []),
+      { time: fmt(homeTime),      label: `All cars collected -- trip complete`,                          detail: d_home      },
+      ...(isImperfect ? [
+        { time: fmt(addMins(homeTime, driveTimeMins)), label: `⚠️ ${driverName(imperfectPutIn)} returns to ${end} to collect stranded kayak${strandedKayaks > 1 ? 's' : ''}`, detail: `${driverName(imperfectPutIn)} drives back to ${end} (${fmtDuration(driveTimeMins)}) to collect the ${strandedKayaks} kayak${strandedKayaks > 1 ? 's' : ''} that could not be carried home in the initial load-up.` },
+        { time: fmt(addMins(homeTime, driveTimeMins * 2)), label: `All kayaks collected -- trip fully complete`, detail: `${driverName(imperfectPutIn)} returns home with the remaining ${strandedKayaks} kayak${strandedKayaks > 1 ? 's' : ''}. Note: this arrangement required an extra return trip to ${end}. Consider adding a non-paddling driver or a car with more kayak capacity next time to avoid this.` }
+      ] : [])
+    ];
+
+    const itinHtml = itinRows.map(r => `
+      <div class="itin-row">
+        <div class="itin-time">${r.time}</div>
+        <div class="itin-body">
+          <div class="itin-label">${r.label}</div>
+          <div class="itin-detail">${r.detail}</div>
+        </div>
+      </div>`).join('');
+
+    const npNote = hasNonPaddlers
+      ? `<p style="font-size:12px;color:var(--text-muted);margin-top:0.75rem;">* Purple tags indicate non-paddling drivers.</p>`
+      : '';
+
+    document.getElementById('result').innerHTML = `
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-badge" style="${isImperfect ? 'background:var(--warning-light);color:var(--warning)' : ''}">${isImperfect ? '&#9888;' : '&#10003;'}</div>
+          <div>
+            <div class="result-title">${start} to ${end}</div>
+            <div class="result-subtitle">${fmtDate(paddleStart)}</div>
+          </div>
+        </div>
+        ${isImperfect ? '<div style="background:var(--warning-light);border:1px solid #f0c070;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--warning);margin-bottom:1.25rem;line-height:1.6;"><strong>Non-ideal arrangement:</strong> All cars must go to the landing to carry enough kayaks, leaving no cars at the launch to return shuttle drivers. <strong>' + driverName(imperfectPutIn) + '</strong> will need to make an extra return trip to ' + end + ' after collecting their car to pick up ' + strandedKayaks + ' stranded kayak' + (strandedKayaks > 1 ? 's' : '') + '. Consider adding a non-paddling driver or a car with more kayak capacity to avoid this.</div>' : ''}
+        <div class="metrics">
+          <div class="metric"><div class="metric-value">${totalPaddlers}</div><div class="metric-label">Paddlers</div></div>
+          <div class="metric"><div class="metric-value">${totalKayaks}</div><div class="metric-label">Kayaks</div></div>
+          <div class="metric"><div class="metric-value">${shuttle.length}</div><div class="metric-label">Cars to<br>landing</div></div>
+          <div class="metric"><div class="metric-value">${fmtDuration(paddleTimeMins)}</div><div class="metric-label">Paddle<br>time</div></div>
+        </div>
+        <div class="itinerary">
+          <div class="itinerary-title">Itinerary</div>
+          ${itinHtml}
+        </div>
+        ${npNote}
+        <button class="print-btn" onclick="window.print()">Print / save as PDF</button>
+      </div>`;
+
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function fmtDuration(mins) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h === 0) return `${m}min`;
+    if (m === 0) return `${h}hr`;
+    return `${h}hr ${m}min`;
+  }
+
+  function getCombinations(arr, k) {
+    const results = [];
+    function helper(start, combo) {
+      if (combo.length === k) { results.push([...combo]); return; }
+      for (let i = start; i < arr.length; i++) {
+        combo.push(arr[i]);
+        helper(i + 1, combo);
+        combo.pop();
+      }
+    }
+    helper(0, []);
+    return results;
+  }
+
+  function showError(msg) {
+    document.getElementById('error-msg').innerHTML = `<div class="error">${msg}</div>`;
+  }
+
+  addCar(3);
+  addCar(3);
+  addCar(1);
+</script>
+</body>
+</html>
