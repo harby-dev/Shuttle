@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kayak Shuttle Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f8; --surface: #ffffff; --surface-2: #f7f9fb;
+      --border: #dde3ea; --border-strong: #c4cdd6;
+      --text: #1a2530; --text-muted: #5a6e80;
+      --accent: #1a6fc4; --accent-light: #e6f0fb; --accent-dark: #145499;
+      --success: #1a7a4a; --success-light: #e6f5ed;
+      --danger: #c0392b; --danger-light: #fdecea;
+      --radius: 10px; --radius-lg: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .page-wrap { max-width: 680px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2.5rem; }
+    .logo-mark { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: var(--accent); border-radius: 14px; margin-bottom: 1rem; }
+    .logo-mark svg { width: 28px; height: 28px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.3px; color: var(--text); margin-bottom: 0.4rem; }
+    .subtitle { font-size: 15px; color: var(--text-muted); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
+    .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+    input[type="text"], input[type="number"] {
+      width: 100%; height: 38px; padding: 0 10px;
+      font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text);
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
+      outline: none; transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--accent); background: #fff; }
+    .hint { font-size: 12px; color: var(--text-muted); background: var(--accent-light); border-radius: var(--radius); padding: 8px 12px; margin-top: 0.75rem; line-height: 1.5; }
+    .car-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 0.75rem; }
+    .car-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .car-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .remove-btn { background: none; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 16px; line-height: 1; transition: background 0.15s, color 0.15s; }
+    .remove-btn:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+    .add-btn { width: 100%; height: 38px; background: none; border: 1px dashed var(--border-strong); border-radius: var(--radius); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-muted); transition: background 0.15s, color 0.15s, border-color 0.15s; margin-top: 0.25rem; }
+    .add-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+    .calc-btn { width: 100%; height: 46px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; margin-top: 0.5rem; }
+    .calc-btn:hover { background: var(--accent-dark); }
+    .calc-btn:active { transform: scale(0.99); }
+    .error { background: var(--danger-light); color: var(--danger); border: 1px solid #f5c6c2; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; margin-top: 1rem; line-height: 1.6; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 1.5rem; box-shadow: var(--shadow); }
+    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+    .result-badge { background: var(--success-light); color: var(--success); border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .result-title { font-size: 16px; font-weight: 600; color: var(--text); }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .metric { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
+    .metric-value { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 4px; }
+    .metric-label { font-size: 11px; color: var(--text-muted); font-weight: 500; line-height: 1.4; }
+    .steps { display: flex; flex-direction: column; }
+    .step { display: flex; gap: 14px; padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step-body { flex: 1; }
+    .step-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .step-detail { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .car-list { margin-top: 6px; }
+    .car-tag { display: inline-block; background: var(--accent-light); color: var(--accent-dark); font-size: 12px; font-weight: 500; border-radius: 5px; padding: 2px 8px; margin: 2px 3px 2px 0; }
+    .print-btn { width: 100%; height: 40px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; margin-top: 1rem; transition: background 0.15s; }
+    .print-btn:hover { background: var(--surface-2); }
+    footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 2rem; padding-bottom: 1rem; }
+    @media (max-width: 500px) {
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .grid-3 .field:first-child { grid-column: 1 / -1; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .card, .result-card { box-shadow: none; border: 1px solid #ccc; }
+      .calc-btn, .add-btn, .remove-btn, .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 17c3-2 5-3 9-3s6 1 9 3"/>
+        <path d="M12 14V6"/>
+        <path d="M8 9l4-3 4 3"/>
+        <circle cx="12" cy="19" r="1.5" fill="white" stroke="none"/>
+      </svg>
+    </div>
+    <h1>Kayak Shuttle Planner</h1>
+    <p class="subtitle">Work out who drives where so everyone paddles together</p>
+  </header>
+
+  <div class="card">
+    <div class="card-title">Trip details</div>
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div class="field">
+        <label for="start">Put-in (start point)</label>
+        <input type="text" id="start" placeholder="e.g. Llangollen" />
+      </div>
+      <div class="field">
+        <label for="end">Take-out (end point)</label>
+        <input type="text" id="end" placeholder="e.g. Erbistock" />
+      </div>
+    </div>
+    <div class="field" style="max-width:220px;">
+      <label for="total-paddlers">Total paddlers (including drivers)</label>
+      <input type="number" id="total-paddlers" min="1" value="6" />
+    </div>
+    <div class="hint">One kayak per paddler. All cars, paddlers, and kayaks start at the put-in. After paddling, enough cars must be at the take-out to carry everyone and all kayaks home.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cars</div>
+    <div id="cars-container"></div>
+    <button class="add-btn" onclick="addCar()">+ Add another car</button>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">Calculate shuttle plan</button>
+
+  <div id="error-msg"></div>
+  <div id="result"></div>
+
+  <footer>Kayak Shuttle Planner &mdash; free to use and share</footer>
+
+</div>
+
+<script>
+  let carCount = 0;
+  const cars = {};
+
+  function addCar() {
+    carCount++;
+    const id = carCount;
+    cars[id] = { name: 'Car ' + id, seats: 4, kayaks: 1 };
+    const container = document.getElementById('cars-container');
+    const div = document.createElement('div');
+    div.className = 'car-card';
+    div.id = 'car-card-' + id;
+    div.innerHTML = `
+      <div class="car-header">
+        <span class="car-label">Car ${id}</span>
+        ${id > 1 ? `<button class="remove-btn" onclick="removeCar(${id})" aria-label="Remove car ${id}">&times;</button>` : ''}
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Name or description</label>
+          <input type="text" placeholder="e.g. Red Golf" value="Car ${id}" oninput="cars[${id}].name=this.value" />
+        </div>
+        <div class="field">
+          <label>Seats (inc. driver)</label>
+          <input type="number" min="1" max="9" value="4" oninput="cars[${id}].seats=parseInt(this.value)||0" />
+        </div>
+        <div class="field">
+          <label>Kayaks it can carry</label>
+          <input type="number" min="0" max="10" value="1" oninput="cars[${id}].kayaks=parseInt(this.value)||0" />
+        </div>
+      </div>`;
+    container.appendChild(div);
+  }
+
+  function removeCar(id) {
+    delete cars[id];
+    const el = document.getElementById('car-card-' + id);
+    if (el) el.remove();
+  }
+
+  function tags(carArray) {
+    return carArray.map(c => `<span class="car-tag">${c.name}</span>`).join('');
+  }
+
+  function calculate() {
+    document.getElementById('error-msg').innerHTML = '';
+    document.getElementById('result').innerHTML = '';
+
+    const totalPaddlers = parseInt(document.getElementById('total-paddlers').value) || 0;
+    const totalKayaks = totalPaddlers; // one kayak per paddler
+    const start = document.getElementById('start').value.trim() || 'the put-in';
+    const end = document.getElementById('end').value.trim() || 'the take-out';
+    const carList = Object.values(cars);
+
+    // --- Basic sanity checks ---
+    if (carList.length < 2) { showError('You need at least 2 cars to run a shuttle.'); return; }
+    if (totalPaddlers < 2) { showError('Please enter at least 2 paddlers.'); return; }
+
+    const totalSeats    = carList.reduce((s, c) => s + (c.seats  || 0), 0);
+    const totalKayakCap = carList.reduce((s, c) => s + (c.kayaks || 0), 0);
+
+    if (totalSeats < totalPaddlers) {
+      showError(`Your cars have ${totalSeats} seats in total but you have ${totalPaddlers} paddlers. Please add more cars or increase seat capacity.`);
+      return;
+    }
+    if (totalKayakCap < totalKayaks) {
+      showError(`Your cars can carry ${totalKayakCap} kayaks in total but you have ${totalKayaks}. Please add more cars or increase kayak capacity.`);
+      return;
+    }
+
+    // --- Find the best subset of cars to shuttle to the take-out ---
+    //
+    // Rules:
+    // 1. The SHUTTLE cars (driven to take-out first) must together have:
+    //      a. Enough seats for ALL paddlers (everyone needs a lift home from take-out)
+    //      b. Enough kayak capacity for ALL kayaks (everything goes home from take-out)
+    // 2. The PUT-IN cars (stay behind) must have enough seats to carry
+    //    the shuttle drivers back from the take-out to the put-in.
+    //    Number of shuttle drivers = number of shuttle cars.
+    // 3. We want the FEWEST shuttle cars that satisfy both rules.
+    //
+    // Approach: try every subset of cars (brute force is fine for small groups).
+    // Pick the valid subset with the fewest cars, breaking ties by fewest seats wasted.
+
+    const n = carList.length;
+    let bestSolution = null;
+
+    // Iterate subsets from smallest to largest
+    for (let size = 1; size < n; size++) {
+      const combos = getCombinations(carList, size);
+      for (const shuttle of combos) {
+        const putIn = carList.filter(c => !shuttle.includes(c));
+
+        const shuttleSeats    = shuttle.reduce((s, c) => s + c.seats,  0);
+        const shuttleKayakCap = shuttle.reduce((s, c) => s + c.kayaks, 0);
+        const putInSeats      = putIn.reduce((s, c)   => s + c.seats,  0);
+        const driversToReturn = shuttle.length;
+
+        const rule1a = shuttleSeats    >= totalPaddlers;
+        const rule1b = shuttleKayakCap >= totalKayaks;
+        const rule2  = putInSeats      >= driversToReturn;
+
+        if (rule1a && rule1b && rule2) {
+          bestSolution = { shuttle, putIn };
+          break;
+        }
+      }
+      if (bestSolution) break;
+    }
+
+    if (!bestSolution) {
+      showError('No valid shuttle arrangement found with these cars. You may need more cars, more seats, or more kayak capacity.');
+      return;
+    }
+
+    const { shuttle, putIn } = bestSolution;
+    const driversToReturn = shuttle.length;
+
+    // --- Build the plan ---
+    const steps = [];
+
+    steps.push({
+      title: `Everyone meets at ${start}`,
+      detail: `All ${totalPaddlers} paddlers arrive at the put-in with all ${n} car${n > 1 ? 's' : ''} and all ${totalKayaks} kayaks loaded up.`
+    });
+
+    steps.push({
+      title: `Shuttle ${shuttle.length} car${shuttle.length > 1 ? 's' : ''} to ${end}`,
+      detail: `The following car${shuttle.length > 1 ? 's drive' : ' drives'} to the take-out at ${end} and park up — no kayaks needed for this leg, just the driver(s).<div class="car-list">${tags(shuttle)}</div>`
+    });
+
+    steps.push({
+      title: `Bring shuttle driver${driversToReturn > 1 ? 's' : ''} back to ${start}`,
+      detail: `${tags(putIn)} drive${putIn.length === 1 ? 's' : ''} to ${end} to collect the ${driversToReturn} shuttle driver${driversToReturn > 1 ? 's' : ''} and return to ${start}. All ${totalPaddlers} paddlers are now together at the put-in ready to paddle.`
+    });
+
+    steps.push({
+      title: `Paddle from ${start} to ${end}`,
+      detail: `Everyone gets on the water. ${tags(shuttle)} ${shuttle.length === 1 ? 'is' : 'are'} already waiting at the take-out.`
+    });
+
+    steps.push({
+      title: `Load up and head home from ${end}`,
+      detail: `At the take-out, load all ${totalKayaks} kayaks and all ${totalPaddlers} paddlers into ${tags(shuttle)}. Then drive back to ${start} to collect ${tags(putIn)} and head home.`
+    });
+
+    const stepsHtml = steps.map((s, i) => `
+      <div class="step">
+        <div class="step-num">${i + 1}</div>
+        <div class="step-body">
+          <div class="step-title">${s.title}</div>
+          <div class="step-detail">${s.detail}</div>
+        </div>
+      </div>`).join('');
+
+    const shuttleKayakCap = shuttle.reduce((s, c) => s + c.kayaks, 0);
+    const shuttleSeats    = shuttle.reduce((s, c) => s + c.seats,  0);
+
+    document.getElementById('result').innerHTML = `
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-badge">&#10003;</div>
+          <div class="result-title">Shuttle plan &mdash; ${start} to ${end}</div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-value">${totalPaddlers}</div><div class="metric-label">Paddlers</div></div>
+          <div class="metric"><div class="metric-value">${totalKayaks}</div><div class="metric-label">Kayaks</div></div>
+          <div class="metric"><div class="metric-value">${shuttle.length}</div><div class="metric-label">Cars shuttled<br>to take-out</div></div>
+          <div class="metric"><div class="metric-value">${putIn.length}</div><div class="metric-label">Cars left<br>at put-in</div></div>
+        </div>
+        <div class="steps">${stepsHtml}</div>
+        <button class="print-btn" onclick="window.print()">Print / save as PDF</button>
+      </div>`;
+
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Generate all combinations of size k from array
+  function getCombinations(arr, k) {
+    const results = [];
+    function helper(start, combo) {
+      if (combo.length === k) { results.push([...combo]); return; }
+      for (let i = start; i < arr.length; i++) {
+        combo.push(arr[i]);
+        helper(i + 1, combo);
+        combo.pop();
+      }
+    }
+    helper(0, []);
+    return results;
+  }
+
+  function showError(msg) {
+    document.getElementById('error-msg').innerHTML = `<div class="error">${msg}</div>`;
+  }
+
+  addCar();
+  addCar();
+</script>
+</body>
+</html>
