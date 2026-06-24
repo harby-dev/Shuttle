@@ -95,7 +95,7 @@
         <circle cx="12" cy="19" r="1.5" fill="white" stroke="none"/>
       </svg>
     </div>
-    <h1>Kayak Shuttle Planner</h1>
+    <h1>Kayak Shuttle Planner - Sea Kayak Si</h1>
     <p class="subtitle">Work out who drives where so everyone paddles together</p>
   </header>
 
@@ -103,19 +103,19 @@
     <div class="card-title">Trip details</div>
     <div class="grid-2" style="margin-bottom:12px;">
       <div class="field">
-        <label for="start">Put-in (start point)</label>
-        <input type="text" id="start" placeholder="e.g. Llangollen" />
+        <label for="start">Launch (start point)</label>
+        <input type="text" id="start" placeholder="e.g. Rhubodach" />
       </div>
       <div class="field">
-        <label for="end">Take-out (end point)</label>
-        <input type="text" id="end" placeholder="e.g. Erbistock" />
+        <label for="end">Landing (end point)</label>
+        <input type="text" id="end" placeholder="e.g. Ettrick Bay" />
       </div>
     </div>
     <div class="field" style="max-width:220px;">
       <label for="total-paddlers">Total paddlers (including drivers)</label>
       <input type="number" id="total-paddlers" min="1" value="6" />
     </div>
-    <div class="hint">One kayak per paddler. All cars, paddlers, and kayaks start at the put-in. After paddling, enough cars must be at the take-out to carry everyone and all kayaks home.</div>
+    <div class="hint">One kayak per paddler. All cars, paddlers, and kayaks start at the Launch. After paddling, enough cars must be at the Landing to carry everyone and all kayaks home.</div>
   </div>
 
   <div class="card">
@@ -183,8 +183,8 @@
 
     const totalPaddlers = parseInt(document.getElementById('total-paddlers').value) || 0;
     const totalKayaks = totalPaddlers; // one kayak per paddler
-    const start = document.getElementById('start').value.trim() || 'the put-in';
-    const end = document.getElementById('end').value.trim() || 'the take-out';
+    const start = document.getElementById('start').value.trim() || 'the Launch';
+    const end = document.getElementById('end').value.trim() || 'the Landing';
     const carList = Object.values(cars);
 
     // --- Basic sanity checks ---
@@ -203,14 +203,14 @@
       return;
     }
 
-    // --- Find the best subset of cars to shuttle to the take-out ---
+    // --- Find the best subset of cars to shuttle to the Landing ---
     //
     // Rules:
-    // 1. The SHUTTLE cars (driven to take-out first) must together have:
-    //      a. Enough seats for ALL paddlers (everyone needs a lift home from take-out)
-    //      b. Enough kayak capacity for ALL kayaks (everything goes home from take-out)
-    // 2. The PUT-IN cars (stay behind) must have enough seats to carry
-    //    the shuttle drivers back from the take-out to the put-in.
+    // 1. The SHUTTLE cars (driven to Landing first) must together have:
+    //      a. Enough seats for ALL paddlers (everyone needs a lift home from Landing)
+    //      b. Enough kayak capacity for ALL kayaks (everything goes home from Landing)
+    // 2. The Launch cars (stay behind) must have enough seats to carry
+    //    the shuttle drivers back from the Landing to the Launch.
     //    Number of shuttle drivers = number of shuttle cars.
     // 3. We want the FEWEST shuttle cars that satisfy both rules.
     //
@@ -256,27 +256,27 @@
 
     steps.push({
       title: `Everyone meets at ${start}`,
-      detail: `All ${totalPaddlers} paddlers arrive at the put-in with all ${n} car${n > 1 ? 's' : ''} and all ${totalKayaks} kayaks loaded up.`
+      detail: `All ${totalPaddlers} paddlers arrive at the Launch with all ${n} car${n > 1 ? 's' : ''} and all ${totalKayaks} kayaks loaded up.`
     });
 
     steps.push({
       title: `Shuttle ${shuttle.length} car${shuttle.length > 1 ? 's' : ''} to ${end}`,
-      detail: `The following car${shuttle.length > 1 ? 's drive' : ' drives'} to the take-out at ${end} and park up — no kayaks needed for this leg, just the driver(s).<div class="car-list">${tags(shuttle)}</div>`
+      detail: `The following car${shuttle.length > 1 ? 's drive' : ' drives'} to the Landing at ${end} and park up — no kayaks needed for this leg, just the driver(s).<div class="car-list">${tags(shuttle)}</div>`
     });
 
     steps.push({
       title: `Bring shuttle driver${driversToReturn > 1 ? 's' : ''} back to ${start}`,
-      detail: `${tags(putIn)} drive${putIn.length === 1 ? 's' : ''} to ${end} to collect the ${driversToReturn} shuttle driver${driversToReturn > 1 ? 's' : ''} and return to ${start}. All ${totalPaddlers} paddlers are now together at the put-in ready to paddle.`
+      detail: `${tags(putIn)} drive${putIn.length === 1 ? 's' : ''} to ${end} to collect the ${driversToReturn} shuttle driver${driversToReturn > 1 ? 's' : ''} and return to ${start}. All ${totalPaddlers} paddlers are now together at the Launch ready to paddle.`
     });
 
     steps.push({
       title: `Paddle from ${start} to ${end}`,
-      detail: `Everyone gets on the water. ${tags(shuttle)} ${shuttle.length === 1 ? 'is' : 'are'} already waiting at the take-out.`
+      detail: `Everyone gets on the water. ${tags(shuttle)} ${shuttle.length === 1 ? 'is' : 'are'} already waiting at the Landing.`
     });
 
     steps.push({
       title: `Load up and head home from ${end}`,
-      detail: `At the take-out, load all ${totalKayaks} kayaks and all ${totalPaddlers} paddlers into ${tags(shuttle)}. Then drive back to ${start} to collect ${tags(putIn)} and head home.`
+      detail: `At the Landing, load all ${totalKayaks} kayaks and all ${totalPaddlers} paddlers into ${tags(shuttle)}. Then drive back to ${start} to collect ${tags(putIn)} and head home.`
     });
 
     const stepsHtml = steps.map((s, i) => `
@@ -300,8 +300,8 @@
         <div class="metrics">
           <div class="metric"><div class="metric-value">${totalPaddlers}</div><div class="metric-label">Paddlers</div></div>
           <div class="metric"><div class="metric-value">${totalKayaks}</div><div class="metric-label">Kayaks</div></div>
-          <div class="metric"><div class="metric-value">${shuttle.length}</div><div class="metric-label">Cars shuttled<br>to take-out</div></div>
-          <div class="metric"><div class="metric-value">${putIn.length}</div><div class="metric-label">Cars left<br>at put-in</div></div>
+          <div class="metric"><div class="metric-value">${shuttle.length}</div><div class="metric-label">Cars shuttled<br>to Landing</div></div>
+          <div class="metric"><div class="metric-value">${putIn.length}</div><div class="metric-label">Cars left<br>at Launch</div></div>
         </div>
         <div class="steps">${stepsHtml}</div>
         <button class="print-btn" onclick="window.print()">Print / save as PDF</button>
