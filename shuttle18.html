@@ -496,7 +496,9 @@
     }
 
     const { shuttle, putIn, npShuttle, npUnused, npReturning, imperfect, strandedKayaks, imperfectPutIn } = bestSolution;
-    const npNeeded      = npShuttle.length > 0;
+    const npNeededForCapacity = npShuttle.length > 0;
+    const npNeededForReturn   = npReturning.length > 0;
+    const npNeeded      = npNeededForCapacity; // true only when non-paddler adds capacity to shuttle
     const npUnneeded    = npUnused.length > 0;
     const allReturnCars = [...putIn, ...npReturning];
     const isImperfect   = !!imperfect;
@@ -571,7 +573,8 @@
 
     const allMeetCars = npNeeded ? [...paddlingCars, ...npShuttle] : paddlingCars;
     const d_meet = `All ${totalPaddlers} paddler${totalPaddlers > 1 ? 's' : ''} arrive at the launch with all ${paddlingCars.length} paddling car${paddlingCars.length > 1 ? 's' : ''} and all ${totalKayaks} kayak${totalKayaks > 1 ? 's' : ''} loaded. Car summary: ${allMeetCars.map(c => carWithPassengers(c)).join(', ')}.`
-      + (npNeeded ? ` <strong>${carNames(npShuttle)}</strong> (non-paddling driver${npShuttle.length > 1 ? 's' : ''}) will drive to ${end} as their capacity is needed.`
+      + (npNeededForCapacity ? ` <strong>${carNames(npShuttle)}</strong> (non-paddling driver${npShuttle.length > 1 ? 's' : ''}) will drive to ${end} as their capacity is needed.`
+        : npNeededForReturn ? ` <strong>${carNames(npReturning)}</strong> (non-paddling driver${npReturning.length > 1 ? 's' : ''}) will drive to ${end} to return shuttle drivers to the launch -- paddling cars have enough seat and kayak capacity but need a return vehicle.`
         : hasNonPaddlers ? ` <strong>${carNames(nonPaddlerCars)}</strong> (non-paddling driver${nonPaddlerCount > 1 ? 's' : ''}) is not needed today -- paddling cars have sufficient capacity.` : '');
 
     let d_shuttle = `${carNames(shuttle)} drive${shuttle.length === 1 ? 's' : ''} empty to the landing. Driver${shuttle.length > 1 ? 's' : ''}: <strong>${driverList(paddlingShuttle)}</strong>. Estimated arrival ${fmt(shuttleArrive)}.`;
@@ -579,7 +582,8 @@
 
     let d_return = `${carNames(allReturnCars)} drive${allReturnCars.length === 1 ? 's' : ''} to ${end} to pick up <strong>${driverList(paddlingShuttle)}</strong> and return to ${start}. Estimated arrival back at ${start}: ${fmt(driversBack)}.`;
     if (nonDrivingPaddlers > 0) d_return += ` The ${nonDrivingPaddlers} non-driving paddler${nonDrivingPaddlers > 1 ? 's' : ''} continue waiting at ${start}.`;
-    if (npReturning.length > 0) d_return += ` ${carNames(npReturning)} is making the return trip as there are no put-in cars.`;
+    if (npReturning.length > 0 && putIn.length === 0) d_return += ` ${carNames(npReturning)} is making this return trip as the non-paddling driver -- there are no put-in cars available to collect the shuttle drivers.`;
+    else if (npReturning.length > 0) d_return += ` ${carNames(npReturning)} also assists with the return as put-in car seats alone are not enough.`;
 
     let d_together = `All paddling drivers now at the launch: <strong>${driverList(paddlingCars)}</strong>.`;
     d_together += nonDrivingPaddlers > 0
